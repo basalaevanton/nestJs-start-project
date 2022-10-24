@@ -8,10 +8,15 @@ import * as uuid from 'uuid';
 import { TokenUserDto } from '../dto/token-user.dto';
 import { TokenService } from './token.service';
 import { MailService } from './mail.service';
+import { User, UserDocument } from '../../users/schemas/user.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectModel(User.name, 'users')
+    private readonly userModel: Model<UserDocument>,
+
     private tokenService: TokenService,
     private userService: UsersService,
     private mailService: MailService,
@@ -54,5 +59,18 @@ export class AuthService {
       httpOnly: true,
     });
     return { accessToken: tokens.accessToken, user: userClient };
+  }
+
+  async activate(activationLink) {
+    const user = await this.userModel.findOne({ activationLink });
+
+    if (!user) {
+      throw new HttpException(
+        'Некоректная ссылка активации',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    user.isActivated = true;
+    await user.save();
   }
 }

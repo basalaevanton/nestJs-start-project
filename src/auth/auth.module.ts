@@ -11,6 +11,7 @@ import { AuthService } from './services/auth.service';
 import { TokenService } from './services/token.service';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { MailService } from './services/mail.service';
+import { User, UserSchema } from '../users/schemas/user.schema';
 
 @Module({
   imports: [
@@ -19,6 +20,10 @@ import { MailService } from './services/mail.service';
     }),
     MongooseModule.forFeature(
       [{ name: userToken.name, schema: userTokenSchema }],
+      'users',
+    ),
+    MongooseModule.forFeature(
+      [{ name: User.name, schema: UserSchema }],
       'users',
     ),
     forwardRef(() => UsersModule),
