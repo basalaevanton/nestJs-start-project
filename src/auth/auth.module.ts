@@ -15,6 +15,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
 
 @Module({
   imports: [
+    forwardRef(() => UsersModule),
     ConfigModule.forRoot({
       envFilePath: `.${process.env.NODE_ENV}.env`,
     }),
@@ -26,7 +27,7 @@ import { User, UserSchema } from '../users/schemas/user.schema';
       [{ name: User.name, schema: UserSchema }],
       'users',
     ),
-    forwardRef(() => UsersModule),
+
     JwtModule.register({
       secret: process.env.PRIVATE_KEY,
       signOptions: {
@@ -51,6 +52,6 @@ import { User, UserSchema } from '../users/schemas/user.schema';
   ],
   controllers: [AuthController],
   providers: [AuthService, TokenService, MailService],
-  exports: [AuthService, JwtModule, MailService],
+  exports: [AuthService, MailService, JwtModule],
 })
 export class AuthModule {}

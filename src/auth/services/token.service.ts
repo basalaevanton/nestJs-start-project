@@ -28,12 +28,19 @@ export class TokenService {
   }
 
   async saveToken(tokenDto: CreateTokenDto) {
-    const tokenData = await this.userTokenModel.findOne({ user: tokenDto.userId });
+    const tokenData = await this.userTokenModel.findOne({
+      user: tokenDto.userId,
+    });
     if (tokenData) {
       tokenData.refreshToken = tokenDto.refreshToken;
       return tokenData.save();
     }
     const token = await this.userTokenModel.create(tokenDto);
     return token;
+  }
+
+  async removeToken(refreshToken) {
+    const tokenData = await this.userTokenModel.deleteOne({ refreshToken });
+    return tokenData;
   }
 }

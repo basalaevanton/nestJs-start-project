@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 import { AuthUserDto } from '../../users/dto/user.dto';
@@ -72,5 +78,57 @@ export class AuthService {
     }
     user.isActivated = true;
     await user.save();
+  }
+
+  async login(userDto: AuthUserDto, response) {
+    const user = await this.validateUser(userDto);
+    const userClient = new TokenUserDto(user);
+    console.log(userClient);
+
+    const tokens = await this.tokenService.generateToken({ ...userClient });
+
+    await this.tokenService.saveToken({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+    });
+
+    response.cookie('refreshToken', tokens.refreshToken, {
+      expires: +process.env.COOKIE_PRIVATE_TIME * 24 * 60 * 60 * 1000,
+      sameSite: 'strict',
+      httpOnly: true,
+    });
+
+    return { user: userClient, accessToken: tokens.accessToken };
+  }
+
+  async validateUser(userDto: AuthUserDto): Promise<any> {
+    const user = await this.userService.getUserByEmail(userDto.email);
+
+    if (!user) {
+      throw new NotFoundException(`No user found for email: ${userDto.email}`);
+    }
+
+    const passwordEquals = await bcrypt.compare(
+      userDto.password,
+      user.password,
+    );
+
+    if (user && passwordEquals) {
+      return user;
+    }
+    throw new UnauthorizedException({
+      message: 'Некорректный емайл',
+    });
+  }
+
+  async logout(request, response) {
+    const { refreshToken } = request.cookies;
+
+    if (!refreshToken) {
+      return response.redirect(process.env.CLIENT_URL);
+    }
+    response.clearCookie('refreshToken');
+    const token = await this.tokenService.removeToken(refreshToken);
+    throw new HttpException('Успешно вышли из системы', HttpStatus.OK);
   }
 }
