@@ -1,6 +1,14 @@
-import { Body, Controller, Get, Param, Post, Res, Response } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Res,
+  Response,
+} from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { RegistrationUserDto } from '../users/dto/user.dto';
+import { AuthUserDto } from '../users/dto/user.dto';
 import { AuthService } from './services/auth.service';
 
 @ApiTags('Auth')
@@ -13,7 +21,7 @@ export class AuthController {
     summary: 'Регистрация пользователя',
   })
   registration(
-    @Body() userDto: RegistrationUserDto,
+    @Body() userDto: AuthUserDto,
     @Response({ passthrough: true }) response,
   ) {
     return this.authService.registration(userDto, response);
@@ -23,7 +31,6 @@ export class AuthController {
   @ApiOperation({
     summary: 'Активация аккаунта',
   })
-  @ApiParam({ name: 'Activated link' })
   @ApiResponse({
     status: 308,
     description: 'Your account is activated now',

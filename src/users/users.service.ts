@@ -15,7 +15,6 @@ export class UsersService {
     const user = await this.userModel.create({
       email: dto.email,
       password: dto.password,
-      activationLink: dto.activationLink,
       isActivated: false,
     });
 

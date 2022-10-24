@@ -23,11 +23,6 @@ export class User {
   })
   @Prop({ required: true })
   isActivated: boolean;
-
-  @ApiProperty({
-    description: 'Cсылка на активацию',
-  })
-  activationLink: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

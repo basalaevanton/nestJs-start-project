@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { User } from './schemas/user.schema';
 import { UsersService } from './users.service';
@@ -8,6 +8,10 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @ApiOperation({
+    summary: 'Все пользователи',
+  })
+  @ApiResponse({ status: 200, type: [User] })
   @Get()
   async findAll(): Promise<User[]> {
     return this.usersService.findAll();

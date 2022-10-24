@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
-import { RegistrationUserDto } from '../../users/dto/user.dto';
+import { AuthUserDto } from '../../users/dto/user.dto';
 import { UsersService } from '../../users/users.service';
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
@@ -22,7 +22,7 @@ export class AuthService {
     private mailService: MailService,
   ) {}
 
-  async registration(userDto: RegistrationUserDto, response) {
+  async registration(userDto: AuthUserDto, response) {
     const candidate = await this.userService.getUserByEmail(userDto.email);
 
     if (candidate) {
