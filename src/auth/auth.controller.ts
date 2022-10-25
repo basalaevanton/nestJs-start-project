@@ -10,11 +10,18 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthUserDto } from '../users/dto/user.dto';
 import { AuthService } from './services/auth.service';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LoginRespDto } from './dto/login-resp.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -22,14 +29,16 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('/registration')
+  @ApiQuery({ type: AuthUserDto })
   @ApiOperation({
     summary: 'Регистрация пользователя',
   })
-  registration(
-    @Body() userDto: AuthUserDto,
-    @Response({ passthrough: true }) response,
-  ) {
-    return this.authService.registration(userDto, response);
+  @ApiResponse({
+    status: 200,
+    description: 'Email успешно зарегестрирован в системе',
+  })
+  registration(@Body() userDto: AuthUserDto) {
+    return this.authService.registration(userDto);
   }
 
   @Get('/activate/:link')
@@ -46,6 +55,21 @@ export class AuthController {
   }
 
   @Post('/login')
+  @ApiQuery({ type: AuthUserDto })
+  @ApiResponse({
+    status: 200,
+    type: LoginRespDto,
+    description: 'Successfully authenticated & SetCookie',
+    headers: {
+      setCookie: {
+        description: 'Set-Cookie',
+        schema: {
+          type: 'string',
+          example: 'refreshToken=abcde12345 HttpOnly',
+        },
+      },
+    },
+  })
   async login(
     @Body() userDto: AuthUserDto,
     @Response({ passthrough: true }) response,
@@ -56,17 +80,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Post('/logout')
   @ApiOperation({
-    summary: 'Logout user from account',
+    summary: 'Logout пользователя из приложения',
   })
   @ApiResponse({
     status: 200,
-    description: 'Logout Delete Refresh Token & Cookie',
+    description: 'Выход из системы',
     headers: {
       setCookie: {
         description: 'Del-Cookie',
         schema: {
           type: 'string',
-          example: 'JSESSIONID="" HttpOnly',
+          example: 'refreshToken="" HttpOnly',
         },
       },
     },

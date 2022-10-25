@@ -1,10 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class AuthUserDto {
   @IsEmail()
   @IsNotEmpty()
-  @ApiProperty({ example: 'user@mail.ru', description: 'Почта' })
+  @ApiProperty({ example: 'user@mail.ru', description: 'Почтовый адрес' })
   readonly email: string;
 
   @IsString()
@@ -26,16 +26,6 @@ export class CreateUserDto extends AuthUserDto {
   readonly activationLink: string;
 }
 
-export class ResponseCreateUserDto {
-  @ApiProperty({
-    example: 'asdasdasd12619asd',
-    description: 'AccessToken',
-  })
-  readonly accessToken: string;
 
-  @ApiProperty({
-    type: CreateUserDto,
-    description: 'CreateUserDto',
-  })
-  readonly user: CreateUserDto;
-}
+
+

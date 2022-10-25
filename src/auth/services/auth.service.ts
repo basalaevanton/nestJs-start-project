@@ -11,11 +11,13 @@ import { AuthUserDto } from '../../users/dto/user.dto';
 import { UsersService } from '../../users/users.service';
 import * as bcrypt from 'bcrypt';
 import * as uuid from 'uuid';
-import { TokenUserDto } from '../dto/token-user.dto';
+
 import { TokenService } from './token.service';
 import { MailService } from './mail.service';
 import { User, UserDocument } from '../../users/schemas/user.schema';
 import { Model } from 'mongoose';
+import { LoginRespDto } from '../dto/login-resp.dto';
+import { ResponseUserDto } from '../../users/dto/response-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +30,7 @@ export class AuthService {
     private mailService: MailService,
   ) {}
 
-  async registration(userDto: AuthUserDto, response) {
+  async registration(userDto: AuthUserDto) {
     const candidate = await this.userService.getUserByEmail(userDto.email);
 
     if (candidate) {
@@ -50,7 +52,7 @@ export class AuthService {
       `${process.env.API_URL}/auth/activate/${activationLink}`,
     );
 
-    const userClient = new TokenUserDto(user);
+    const userClient = new ResponseUserDto(user);
 
     const tokens = await this.tokenService.generateToken({ ...userClient });
 
@@ -59,12 +61,10 @@ export class AuthService {
       refreshToken: tokens.refreshToken,
     });
 
-    response.cookie('refreshToken', tokens.refreshToken, {
-      expires: new Date(new Date().getTime() + 30 * 1000),
-      sameSite: 'strict',
-      httpOnly: true,
-    });
-    return { accessToken: tokens.accessToken, user: userClient };
+    throw new HttpException(
+      `${userDto.email} успешно зарегестрирован в системе`,
+      HttpStatus.OK,
+    );
   }
 
   async activate(activationLink) {
@@ -80,10 +80,9 @@ export class AuthService {
     await user.save();
   }
 
-  async login(userDto: AuthUserDto, response) {
+  async login(userDto: AuthUserDto, response): Promise<LoginRespDto> {
     const user = await this.validateUser(userDto);
-    const userClient = new TokenUserDto(user);
-    console.log(userClient);
+    const userClient = new ResponseUserDto(user);
 
     const tokens = await this.tokenService.generateToken({ ...userClient });
 

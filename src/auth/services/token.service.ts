@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateTokenDto } from '../dto/create-token.dto';
-import { TokenUserDto } from '../dto/token-user.dto';
+import { ResponseUserDto } from '../../users/dto/response-user.dto';
 import { userToken, userTokenDocument } from '../schemas/token.schema';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class TokenService {
     private readonly userTokenModel: Model<userTokenDocument>,
   ) {}
 
-  async generateToken(payload: TokenUserDto) {
+  async generateToken(payload: ResponseUserDto) {
     const accessToken = this.jwtService.sign(payload);
     const refreshToken = this.jwtService.sign(payload, {
       secret: process.env.PRIVATE_REFRESH_KEY,
@@ -39,7 +39,7 @@ export class TokenService {
     return token;
   }
 
-  async removeToken(refreshToken) {
+  async removeToken(refreshToken: string) {
     const tokenData = await this.userTokenModel.deleteOne({ refreshToken });
     return tokenData;
   }
