@@ -124,10 +124,50 @@ export class AuthService {
     const { refreshToken } = request.cookies;
 
     if (!refreshToken) {
-      return response.redirect(process.env.CLIENT_URL);
+      throw new UnauthorizedException({
+        message: 'Неавторизованный пользователь',
+      });
     }
     response.clearCookie('refreshToken');
+
     const token = await this.tokenService.removeToken(refreshToken);
     throw new HttpException('Успешно вышли из системы', HttpStatus.OK);
+  }
+
+  async refresh(request, response) {
+    const { refreshToken } = request.cookies;
+
+    if (!refreshToken) {
+      throw new UnauthorizedException({
+        message: 'Неавторизованный пользователь',
+      });
+    }
+
+    const userData = await this.tokenService.validateRefreshToken(refreshToken);
+    const tokenFromDb = await this.tokenService.findToken(refreshToken);
+    if (!userData || !tokenFromDb) {
+      throw new UnauthorizedException({
+        message: 'Неавторизованный пользователь',
+      });
+    }
+
+    const userId = await this.tokenService.findIdUser(refreshToken);
+
+    const user = await this.userService.getUserById(userId);
+    const userClient = new ResponseUserDto(user);
+
+    const tokens = await this.tokenService.generateToken({ ...userClient });
+    await this.tokenService.saveToken({
+      userId: user.id,
+      refreshToken: tokens.refreshToken,
+    });
+
+    response.cookie('refreshToken', tokens.refreshToken, {
+      expires: +process.env.COOKIE_PRIVATE_TIME * 24 * 60 * 60 * 1000,
+      sameSite: 'strict',
+      httpOnly: true,
+    });
+    // вместо user возвращать роли и разрешения
+    return { token: tokens.accessToken, user: userClient };
   }
 }

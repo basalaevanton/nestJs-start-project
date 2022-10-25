@@ -11,6 +11,8 @@ import {
   Req,
 } from '@nestjs/common';
 import {
+  ApiCookieAuth,
+  ApiHeader,
   ApiOperation,
   ApiParam,
   ApiQuery,
@@ -97,5 +99,31 @@ export class AuthController {
   })
   logout(@Req() request: Request, @Response({ passthrough: true }) response) {
     return this.authService.logout(request, response);
+  }
+
+  @ApiOperation({
+    summary: 'Обновление токенов',
+  })
+  @ApiHeader({
+    name: 'Обновление токенов',
+    description: 'Обновление токенов с проверкой refreshToken из cookie',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Обновление токенов',
+    headers: {
+      setCookie: {
+        description: 'Set-Cookie',
+        schema: {
+          type: 'string',
+          example: 'refreshToken=abcde12345 HttpOnly',
+        },
+      },
+    },
+  })
+  @Get('/refresh')
+  @ApiCookieAuth()
+  refresh(@Req() request: Request, @Response({ passthrough: true }) response) {
+    return this.authService.refresh(request, response);
   }
 }

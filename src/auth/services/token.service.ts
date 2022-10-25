@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -39,8 +39,41 @@ export class TokenService {
     return token;
   }
 
+  async findToken(refreshToken) {
+    const userStorage = await this.userTokenModel.findOne({ refreshToken });
+    return userStorage;
+  }
+
   async removeToken(refreshToken: string) {
     const tokenData = await this.userTokenModel.deleteOne({ refreshToken });
     return tokenData;
+  }
+
+  async validateRefreshToken(token) {
+    try {
+      const userData = this.jwtService.verify(token, {
+        secret: process.env.PRIVATE_REFRESH_KEY,
+      });
+      return userData;
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
+  async validateAccessToken(token) {
+    try {
+      const userData = this.jwtService.verify(token, {
+        secret: process.env.PRIVATE_KEY,
+      });
+      return userData;
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
+
+  async findIdUser(token: string) {
+    const { _id } = this.jwtService.verify(token, {
+      secret: process.env.PRIVATE_REFRESH_KEY,
+    });
+    return _id;
   }
 }
